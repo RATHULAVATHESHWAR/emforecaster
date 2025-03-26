@@ -1,4 +1,4 @@
-# Stochastic Sparse Sampling (SSS)
+# Stochastic Sparse Sampling (emforecaster)
 ## Overview
 This is the official repository for the paper:
 
@@ -15,8 +15,8 @@ EMForecaster is a novel deep learning architecture specialized for time series f
 ### Using conda
 ```bash
 # Create and activate conda environment
-conda create -n sss python=3.10
-conda activate sss
+conda create -n emforecaster python=3.10
+conda activate emforecaster
 
 # Install requirements
 pip install -r requirements.txt
