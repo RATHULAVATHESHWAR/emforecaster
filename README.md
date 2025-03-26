@@ -1,4 +1,4 @@
-# Stochastic Sparse Sampling (emforecaster)
+# EMForecaster
 ## Overview
 This is the official repository for the paper:
 
