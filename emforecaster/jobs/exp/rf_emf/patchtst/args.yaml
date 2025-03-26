@@ -1,0 +1,57 @@
+exp:
+  project_name: "rf-emf-forecasting/RF-EMF"
+  model_id: "PatchTST"
+  learning_type: "sl"
+  seed_list: [69421, 69422, 69423, 69424, 69425]
+  seed: 69421
+  mae: True
+  rank_verbose: False
+  task: "forecasting"
+  gpu_id: 2
+  neptune: True
+
+data:
+  seq_load: True
+  dataset: "rf_emf"
+  univariate: True
+  window_stride: 1
+  dtype: "float32"
+  seq_len: 20
+  pred_len: 20
+  train_split: 0.7
+  val_split: 0.1
+  num_channels: 1
+  num_workers: 4
+  scale: True
+  patch_dim: 16
+  patch_stride: 8
+
+ddp:
+  ddp: False
+  master_port: "12356"
+
+sl:
+  optimizer: "adam"
+  dataset_class: "univariate_forecasting"
+  criterion: "MSE"
+  scheduler: "onecycle"
+  epochs: 100
+  batch_size: 512
+  lr: 1e-4
+  early_stopping: True
+  weight_decay: 1e-4
+  num_enc_layers: 3
+  d_model: 16
+  d_ff: 32
+  num_heads: 2
+  dropout: 0.3
+  ff_dropout: 0.3
+  attn_dropout: 0.0
+  pred_dropout: 0.0
+
+scheduler:
+  pct_start: 0.3
+  lradj: "type3"
+
+early_stopping:
+  patience: 20

@@ -1,0 +1,6 @@
+virtual_env: "torch2024_v2"
+cluster: "narval"
+modules: "StdEnv/2023 cuda/12.2 cudnn/8.9.5.29 python/3.10"
+logdir: "/home/xmootoo/projects/def-hinat/xmootoo/projects/emforecaster-jepa/emforecaster/jobs/hpc/logs"
+script_path: "/home/xmootoo/projects/def-hinat/xmootoo/projects/emforecaster-jepa/emforecaster/tuning/grid_search/grid_search.py"
+job_name: "rf_emf/baselines/cnn"

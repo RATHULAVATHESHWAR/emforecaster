@@ -1,0 +1,41 @@
+neptune:
+  project: "rf-emf-conf/main"
+
+single_filter:
+  "parameters/exp/model_id": "PatchTST"
+  "parameters/data/dataset": "rf_emf_ptv2"
+  "parameters/data/seq_len": 336
+  # "parameters/data/pred_len": 96
+  # "parameters/conf/alpha": 0.01
+
+# multi_filter:
+#   "parameters/exp/model_id": ["PatchTST"]
+#   "parameters/data/dataset": ["rf_emf_det"]
+#   "parameters/data/seq_len": [336]
+#   "parameters/data/pred_len": [96, 192, 336, 512]
+
+metrics:
+  - "sl_test/loss"
+  - "sl_test/mae"
+  # - "sl_test/jc"
+  # - "sl_test/ic"
+  # - "sl_test/interval_width_mean"
+  # - "sl_test/interval_width_std"
+
+deciding_metric: "sl_test/loss"
+ranking: "min"
+delete_duplicates: False
+duplicate_ranking: "min"
+
+params:
+  - "parameters/data/seq_len"
+  - "parameters/data/pred_len"
+  - "parameters/sl/d_model"
+  - "parameters/sl/d_ff"
+  - "parameters/sl/num_heads"
+  - "parameters/sl/num_enc_layers"
+  - "parameters/sl/dropout"
+  - "parameters/exp/model_id"
+  - "parameters/data/dataset"
+  # - "parameters/conf/alpha"
+seeds: [69421, 69422, 69423, 69424, 69425]

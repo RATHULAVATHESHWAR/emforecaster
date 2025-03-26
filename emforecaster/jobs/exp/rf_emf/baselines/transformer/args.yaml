@@ -1,0 +1,50 @@
+exp:
+  project_name: "rf-emf-forecasting/RF-EMF"
+  model_id: "RF_EMF_Transformer"
+  learning_type: "sl"
+  id: "rf_emf"
+  best_model_path: "checkpoint/rf_emf_baseline"
+  seed_list: [69421, 69422, 69423, 69424, 69425]
+  seed: 69421
+  mae: True
+  neptune: True
+  gpu_id: 2
+
+data:
+  seq_load: True
+  dataset: "rf_emf"
+  univariate: True
+  window_stride: 1
+  dtype: "float32"
+  seq_len: 336
+  pred_len: 96
+  train_split: 0.7
+  val_split: 0.1
+  num_channels: 1
+  num_workers: 8
+  scale: True
+
+ddp:
+  ddp: False
+  master_port: "12356"
+  seq_load: False
+
+sl:
+  dataset_class: "univariate_forecasting"
+  criterion: "MSE"
+  d_model: 2
+  num_heads: 2
+  num_enc_layers: 2
+  epochs: 100
+  batch_size: 512
+  lr: 1e-4
+  early_stopping: True
+  weight_decay: 1e-4
+  scheduler: "onecycle"
+
+scheduler:
+  pct_start: 0.3
+  lradj: "type3"
+
+early_stopping:
+  patience: 10

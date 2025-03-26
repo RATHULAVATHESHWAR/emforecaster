@@ -1,0 +1,8 @@
+gpus_per_node: 1
+tasks_per_node: 1
+cpus_per_task: 24
+slurm_mem: 32 # GB
+slurm_time: "11:59:00"
+slurm_account: "def-milad777"
+slurm_mail_user: "xmootoo@gmail.com"
+slurm_mail_type: "ALL"

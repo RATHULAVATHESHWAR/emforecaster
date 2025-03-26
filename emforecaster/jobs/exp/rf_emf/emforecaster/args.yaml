@@ -1,0 +1,69 @@
+exp:
+  project_name: "rf-emf-forecasting/RF-EMF"
+  model_id: "EMForecaster"
+  patch_model_id: "DLinear"
+  backbone_id: "DLinear"
+  learning_type: "sl"
+  seed_list: [69421, 69422, 69423, 69424, 69425]
+  seed: 69421
+  mae: True
+  rank_verbose: False
+  task: "forecasting"
+  neptune: False
+  gpu_id: 0
+
+data:
+  seq_load: True
+  dataset: "rf_emf"
+  univariate: True
+  window_stride: 1
+  dtype: "float32"
+  seq_len: 20
+  pred_len: 20
+  train_split: 0.7
+  val_split: 0.1
+  num_channels: 1
+  num_workers: 4
+  scale: True
+
+dlinear:
+  moving_avg: 3
+  individual: False
+  final_moving_avg: 25
+
+ddp:
+  ddp: False
+  master_port: "11759"
+  find_unused_parameters: True
+
+sl:
+  optimizer: "adam"
+  dataset_class: "univariate_forecasting"
+  criterion: "MSE"
+  scheduler: "onecycle"
+  dropout: 0.3
+  epochs: 100
+  batch_size: 512
+  lr: 1e-5
+  early_stopping: True
+  weight_decay: 1e-5
+  return_head: True
+
+  # RevIN
+  revin: True
+  revin_affine: True
+  revout: True
+  eps_revin: 1e-5
+
+  # EMForecaster
+  patch_norm: "layer"
+  patch_act: "gelu"
+  patch_embed_dim: 128
+  independent_patching: True
+
+scheduler:
+  pct_start: 0.3
+  lradj: "type3"
+
+early_stopping:
+  patience: 20

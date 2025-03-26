@@ -1,0 +1,54 @@
+neptune:
+  project: "rf-emf-conf/main"
+
+single_filter:
+  "parameters/exp/model_id": "EMForecaster"
+  "parameters/exp/patch_model_id": "TSMixer"
+  "parameters/data/dataset": "rf_emf"
+  "parameters/data/seq_len": 336
+  "parameters/data/pred_len": 192
+  "parameters/conf/alpha": 0.01
+
+# multi_filter:
+#   "parameters/exp/model_id": ["RF_EMF_CNN"]
+#   "parameters/data/dataset": ["rf_emf"]
+#   "parameters/data/single_channel": [True]
+#   "parameters/data/seq_len": [336]
+#   "parameters/data/pred_len": [96, 192, 336, 512]
+#   "parameters/data/target_channel": [0]
+# "parameters/data/target_channel":
+# [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+
+metrics:
+  - "sl_test/loss"
+  - "sl_test/mae"
+  - "sl_test/jc"
+  - "sl_test/ic"
+  - "sl_test/interval_width_mean"
+  - "sl_test/interval_width_std"
+
+deciding_metric: "sl_test/loss"
+ranking: "min"
+delete_duplicates: False
+duplicate_ranking: "min"
+
+params:
+  - "parameters/data/seq_len"
+  - "parameters/data/pred_len"
+  - "parameters/exp/model_id"
+  - "parameters/sl/lr"
+  - "parameters/sl/scheduler"
+  - "parameters/exp/backbone_id"
+  - "parameters/sl/patch_norm"
+  - "parameters/sl/patch_act"
+  - "parameters/sl/patch_embed_dim"
+  - "parameters/sl/independent_patching"
+  - "parameters/sl/pos_enc"
+  - "parameters/data/patch_dim"
+  - "parameters/data/patch_stride"
+  - "parameters/tsmixer/num_enc_layers"
+  - "parameters/tsmixer/d_model"
+  - "parameters/data/dataset"
+  - "parameters/conf/alpha"
+
+seeds: [69421, 69422, 69423, 69424, 69425]
