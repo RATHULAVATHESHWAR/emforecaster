@@ -304,25 +304,6 @@ def compute_channel_accuracy(logits, target, ch_ids, u, args, calibrator=None):
         return (preds == targets).float().mean()
 
 
-def sync(args):
-    """
-    Synchronizes all processes for Distributed Data Parallel (DDP).
-    """
-    if args.ddp.ddp:
-        dist.barrier()
-        # print("Synchronizing (classification.py)")
-
-
-def gather_tensor(tensor):
-    gathered = [torch.zeros_like(tensor) for _ in range(dist.get_world_size())]
-    dist.all_gather(gathered, tensor)
-    return torch.cat(gathered)
-
-
-def reduce_tensor(tensor):
-    return dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
-
-
 def get_metrics(
     args: BaseModel,
     logits: Union[torch.Tensor, List[torch.Tensor]],
@@ -354,20 +335,10 @@ def get_metrics(
                 )
                 num_examples += batch_size
 
-            if args.ddp.ddp:
-                sync(args)
-                reduce_tensor(total_metrics)
-                sync(args)
-                reduce_tensor(num_examples)
-            sync(args)
             return total_metrics / num_examples.item()
         else:
             logits = torch.cat(logits)
             target = torch.cat(target)
-            if args.ddp.ddp:
-                sync(args)
-                logits = gather_tensor(logits)
-                target = gather_tensor(target)
             return (
                 compute_accuracy(logits, target, args, calibrator)
                 if rank == 0
@@ -396,12 +367,6 @@ def get_metrics(
                 )
                 num_examples += batch_size
 
-            if args.ddp.ddp:
-                sync(args)
-                reduce_tensor(total_metrics)
-                sync(args)
-                reduce_tensor(num_examples)
-            sync(args)
             return total_metrics / num_examples.item()
         else:
             # Get all outputs/targets/ch_ids/etc from all batches
@@ -409,12 +374,6 @@ def get_metrics(
             target = torch.cat(target)
             ch_ids = torch.cat(ch_ids)
             u = torch.cat(u)
-            if args.ddp.ddp:
-                sync(args)
-                logits = gather_tensor(logits)
-                target = gather_tensor(target)
-                ch_ids = gather_tensor(ch_ids)
-                u = gather_tensor(u)
             return (
                 compute_channel_accuracy(logits, target, ch_ids, u, args, calibrator)
                 if rank == 0
