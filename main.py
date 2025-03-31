@@ -14,47 +14,12 @@ from rich.pretty import pprint
 import warnings
 from pydantic import BaseModel
 from typing import Dict, Any
+# Set the environment variable for OpenMP
+os.environ["OMP_MAX_ACTIVE_LEVELS"] = "1"
 
+# Filter out the specific OpenMP warning
+warnings.filterwarnings("ignore", message="OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.")
 warnings.filterwarnings("ignore", message="h5py not installed, hdf5 features will not be supported.")
-
-def check_patient_cluster(args):
-    if args.open_neuro.patient_cluster != "all" and args.open_neuro.all_clusters is True:
-        return True
-    elif args.open_neuro.patient_cluster == "all" and args.open_neuro.all_clusters is False:
-        return True
-    else:
-        return False
-
-def check_moderntcn_list_lengths(args):
-    list_lengths = []
-
-    # Iterate through all fields of args.moderntcn
-    for field_name, field in args.moderntcn.__fields__.items():
-        # Get the attribute value
-        attr_value = getattr(args.moderntcn, field_name)
-
-        # Check if the attribute is a list
-        if isinstance(attr_value, list):
-            list_lengths.append(len(attr_value))
-
-    # If no lists were found, return True
-    if not list_lengths:
-        raise ValueError("No list attributes found in ModernTCN")
-
-    # Check if all list lengths are equal
-    return all(length == list_lengths[0] for length in list_lengths)
-
-def check_open_neuro_coeff(args):
-    if args.open_neuro.alpha == args.open_neuro.beta and args.open_neuro.alpha!=1.0:
-        return True
-    else:
-        return False
-
-def check_open_neuro_loocv(args):
-    if args.open_neuro.loocv:
-        return bool(set(args.open_neuro.train_clusters) & set(args.open_neuro.test_clusters))
-    else:
-        return False
 
 def update_global_config(ablation_config: Dict[str, Any], global_config: BaseModel, ablation_id: int) -> BaseModel:
     """
@@ -108,23 +73,6 @@ def main(job_name="test", ablation=None, ablation_id=1):
 
     # Run experiment on multiple seeds (optional)
     seed_list = args.exp.seed_list
-    tuning_score = 0 # Hyperparameter tuning score
-
-    if not check_moderntcn_list_lengths(args):
-        console.print("List attributes of ModernTCN are not of equal length. Skipping configuration.", style="bold red")
-        return tuning_score # Return 0 tuning score
-
-    if check_open_neuro_coeff(args):
-        console.print("Alpha and Beta coefficients of OpenNeuro are equal. Skipping configuration.", style="bold red")
-        return tuning_score
-
-    if check_patient_cluster(args):
-        console.print("Patient cluster incompatible with all cluster. Skipping configuration.", style="bold red")
-        return tuning_score
-
-    if check_open_neuro_loocv(args):
-        console.print("Train and test clusters overlap. Skipping configuration.", style="bold red")
-        return tuning_score
 
     if args.open_neuro.loocv:
         args.open_neuro.patient_cluster = "loocv_" + args.open_neuro.test_clusters[0]
@@ -139,25 +87,9 @@ def main(job_name="test", ablation=None, ablation_id=1):
         # Initialize experiment
         exp = Experiment(args)
 
-        # Run experiment
-        if args.ddp.ddp:
-            console.log("Using DDP")
-            os.environ["TORCH_NCCL_BLOCKING_WAIT"] = "1" # Enable timeout
-            os.environ["NCCL_BLOCKING_WAIT_TIMEOUT"] = "1200" # 1200 seconds timeout (20min)
-            if args.ddp.slurm:
-                os.environ["MASTER_ADDR"] = socket.gethostname()
-            else:
-                os.environ['MASTER_ADDR'] = args.ddp.master_addr
-                os.environ['MASTER_PORT'] = args.ddp.master_port
-            world_size = torch.cuda.device_count()
-            mp.spawn(exp.run, args=(world_size,), nprocs=world_size, join=True)
-        else:
-            console.log("Using single device")
-            exp.run()
 
-        tuning_score += exp.tuning_score
-
-    return tuning_score / len(seed_list) # Return the average tuning score (Raytune)
+        console.log("Using single device")
+        exp.run()
 
 if __name__ == "__main__":
     # Non-hyperparameter tuning

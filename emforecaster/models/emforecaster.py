@@ -1,4 +1,3 @@
-from sympy.solvers.diophantine.diophantine import dot
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
@@ -68,7 +67,7 @@ class EMForecaster(nn.Module):
             independent_patching (bool): Whether to process patches independently with the patch embedding model, or dependently.
             d_model (int): Dimension of the model.
             patching_on (bool): Only used for extensions of EMForecaster when patching is done externally.
-            num_pathes (int): Only used for extensions of EMForecaster when patching is done externally.
+            num_patches (int): Only used for extensions of EMForecaster when patching is done externally.
         """
 
         # Parameters

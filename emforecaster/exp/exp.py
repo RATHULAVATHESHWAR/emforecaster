@@ -10,6 +10,8 @@ import random
 warnings.filterwarnings(
     "ignore", message="h5py not installed, hdf5 features will not be supported."
 )
+warnings.filterwarnings("ignore", message=".*omp_set_nested routine deprecated.*")
+
 
 # Rich console
 from rich.console import Console
@@ -24,11 +26,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
-
-# DDP
-from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.distributed import init_process_group, destroy_process_group
-import torch.distributed as dist
 
 # Custom Modules
 from emforecaster.utils.train import EarlyStopping
@@ -49,7 +46,6 @@ from emforecaster.utils.classification import (
     multi_classification_metrics,
     get_metrics,
 )
-from emforecaster.utils.calibration import CalibrationModel
 from emforecaster.conformal.coverage import get_all_critical_scores, get_coverage
 
 # Logger
@@ -68,18 +64,14 @@ import time
 class Experiment:
     def __init__(self, args):
         self.args = args
-        self.tuning_score = 0
         self.start_time = time.time()
 
-    def run(self, rank=0, world_size=1):
+        # Add this to suppress OpenMP warnings
+        import os
+        os.environ["KMP_WARNINGS"] = "off"
+        os.environ["OMP_MAX_ACTIVE_LEVELS"] = "1"
 
-        # Rank and World Size
-        self.rank = rank
-        self.world_size = world_size
-
-        # Probability calibrator
-        self.calibrator = None
-
+    def run(self):
         # Rich Console
         self.console = Console()
 
@@ -95,10 +87,6 @@ class Experiment:
         # Logging
         self.init_logger()
 
-        # DDP
-        if self.args.ddp.ddp:
-            self.init_ddp(rank, world_size)
-
         # Initialize Device
         self.init_device()
 
@@ -106,38 +94,18 @@ class Experiment:
         self.supervised_train()
 
         # Stop Logger
-        if self.rank == 0:
-            if self.args.exp.neptune:
-                self.logger.stop()
-            else:
-                # Save offline logging to JSON file
-                with open(self.log_file, "w") as f:
-                    json.dump(self.logger, f, indent=2)
-
-        # Cleanup DDP Processes
-        if self.args.ddp.ddp:
-            destroy_process_group()
-            torch.cuda.empty_cache()
-
-    def init_ddp(self, rank, world_size):
-        """
-        Initialize distributive data parallel (DDP) for the given rank.
-        """
-        init_process_group(backend="nccl", rank=rank, world_size=world_size)
-        torch.cuda.set_device(rank)  # Explicitly set the current CUDA device
-        self.console.log(f"Initialized rank {rank} (DDP).")
-        self.sync()
-        self.print_master(
-            f"Initialized Distributed Data Parallel aross {self.world_size} devices."
-        )
+        if self.args.exp.neptune:
+            self.logger.stop()
+        else:
+            # Save offline logging to JSON file
+            with open(self.log_file, "w") as f:
+                json.dump(self.logger, f, indent=2)
 
     def init_device(self):
         """
         Initialize CUDA (or MPS) devices.
         """
-        if self.args.ddp.ddp:
-            self.device = torch.device(f"cuda:{self.rank}")
-        elif self.args.exp.mps:
+        if self.args.exp.mps:
             self.device = torch.device(
                 "mps" if torch.backends.mps.is_available() else "cpu"
             )
@@ -147,8 +115,8 @@ class Experiment:
             self.console.log("CUDA not available. Running on CPU.")
         else:
             self.device = torch.device(f"cuda:{self.args.exp.gpu_id}")
-        self.sync()
-        self.console.log(f"Rank {self.rank} device initialized to: {self.device}")
+
+        self.console.log(f"Device initialized to: {self.device}")
 
     def init_dataloaders(self, learning_type="sl", loader_type="train"):
         """
@@ -170,32 +138,20 @@ class Experiment:
         # Deep learning (PyTorch) models
         if self.args.data.seq_load:
             self.seq_load(loader_type, learning_type)
-        elif self.args.data.rank_seq_load:
-            self.rank_seq_load(loader_type, learning_type)
         else:
             raise ValueError(
                 f"Invalid dataloading option. Please set either data.seq_load or data.rank_seq_load to {True}."
             )
 
-    def rank_seq_load(self, loader_type="train", learning_type="sl"):
-        self.print_master(f"Running rank sequential dataloading ({loader_type}).")
-        for i in range(self.world_size):
-            self.sync()
-            if self.rank == i:
-                self.seq_load(loader_type, learning_type)
-            self.sync()
-
     def seq_load(self, loader_type="train", learning_type="sl"):
         self.console.log(
-            f"Running sequential dataloading on rank {self.rank} ({loader_type})."
+            f"Running sequential dataloading ({loader_type})."
         )
         self.free_memory()
         loaders = get_loaders(
             self.args,
             learning_type,
             self.generator,
-            self.rank,
-            self.world_size,
             self.args.sl.dataset_class,
             loader_type,
         )
@@ -245,14 +201,6 @@ class Experiment:
                 f"Scikit-learn model {self.args.exp.model_id} initialized."
             )
             return
-        elif self.args.ddp.ddp:
-            torch.cuda.set_device(self.rank)
-            self.model.to(self.rank)
-            self.model = DDP(
-                self.model,
-                device_ids=[self.rank],
-                find_unused_parameters=self.args.ddp.find_unused_parameters,
-            )
         else:
             self.model.to(self.device)
         num_params = self.count_parameters()
@@ -444,7 +392,7 @@ class Experiment:
             self.print_master("Early stopping initialized.")
 
         # Synchronize before training starts
-        self.sync()
+
         self.best_val_metric = float("inf")
 
         # <--------------- Training --------------->
@@ -474,60 +422,34 @@ class Experiment:
 
                 # Periodic Logging
                 if (i + 1) % 100 == 0:
-
-                    # Aggregate loss metrics across all GPUs
-                    self.print_rank(
-                        f"Train Loss before all_reduce: {running_loss}. Rank: {self.rank}"
-                    )
-                    self.print_rank(
-                        f"Num examples before all_reduce: {running_num_examples}. Rank: {self.rank}"
-                    )
                     loss_tensor = running_loss.to(self.device)
                     num_examples_tensor = running_num_examples.to(self.device)
-
-                    if self.args.ddp.ddp:
-                        self.sync()
-                        dist.all_reduce(loss_tensor, op=dist.ReduceOp.SUM)
-                        dist.all_reduce(num_examples_tensor, op=dist.ReduceOp.SUM)
-                        self.print_rank(
-                            f"Train Loss after all_reduce: {loss_tensor.item()}. Rank: {self.rank}"
-                        )
-                        self.print_rank(
-                            f"Num examples after all_reduce: {num_examples_tensor.item()}. Rank {self.rank}"
-                        )
 
                     end_time = time.time()
 
                     # Only rank 0 prints and logs details
-                    if self.rank == 0:
-                        average_loss = loss_tensor.item() / num_examples_tensor.item()
-                        self.print_master(
-                            f"[Epoch {epoch}, Batch ({i+1}/{len(train_loader)})]: {end_time - start_time:.3f}s. Loss: {average_loss:.6f}"
-                        )
-                        (
-                            self.print_master(f"EMA decay rate: {alpha}")
-                            if flag == "ssl"
-                            else None
-                        )
+                    average_loss = loss_tensor.item() / num_examples_tensor.item()
+                    self.print_master(
+                        f"[Epoch {epoch}, Batch ({i+1}/{len(train_loader)})]: {end_time - start_time:.3f}s. Loss: {average_loss:.6f}"
+                    )
+                    (
+                        self.print_master(f"EMA decay rate: {alpha}")
+                        if flag == "ssl"
+                        else None
+                    )
 
                     # Reset trackers
-                    self.sync()
+
                     running_loss = torch.tensor(0.0, device=self.device)
                     running_num_examples = torch.tensor(0.0, device=self.device)
                     start_time = time.time()
 
                 if scheduler:
-                    self.sync()
                     scheduler.step()
 
-            # Average Loss + Logging
-            if self.args.ddp.ddp:
-                self.sync()
-                dist.all_reduce(total_loss, op=dist.ReduceOp.SUM)
-            if self.rank == 0:
-                epoch_loss = total_loss.item() / num_examples
-                self.print_master(f"Epoch {epoch}. Training loss: {epoch_loss:.6f}.")
-                epoch_logger(self.args, self.logger, f"{flag}_train/loss", epoch_loss)
+            epoch_loss = total_loss.item() / num_examples
+            self.print_master(f"Epoch {epoch}. Training loss: {epoch_loss:.6f}.")
+            epoch_logger(self.args, self.logger, f"{flag}_train/loss", epoch_loss)
 
             # <--------------- Validation --------------->
             if val_loader:
@@ -578,11 +500,11 @@ class Experiment:
                     ch_acc,
                 )
 
-            self.sync()
+
 
             # Early stopping
             if early_stopping:
-                if self.rank == 0 and self.early_stopping.early_stop:
+                if self.early_stopping.early_stop:
                     self.print_master(f"EarlyStopping activated, ending training.")
 
                     # Calibrate model on last epoch if early stopping triggered
@@ -600,36 +522,17 @@ class Experiment:
                             coverage=False,
                         )
 
-                    # If DDP is enabled, broadcast the early stopping signal to all GPUs
-                    if self.args.ddp.ddp:
-                        should_stop_tensor = torch.tensor(
-                            1, dtype=torch.int, device=self.device
-                        )
-                        dist.broadcast(should_stop_tensor, src=0)
                     break
-                elif self.args.ddp.ddp:
-                    # On non-master GPUs, receive the broadcast to stop
-                    should_stop_tensor = torch.tensor(
-                        0, dtype=torch.int, device=self.device
-                    )
-                    dist.broadcast(should_stop_tensor, src=0)
-                    if should_stop_tensor.item() == 1:
-                        break
 
-                # Synchronize after early stopping
-                self.sync()
+            # Logging Checkpoint
+            if self.args.exp.neptune:
+                pass
+            else:
+                run_time = time.time() - self.start_time
+                self.logger["parameters/running_time"] = format_time_dynamic(
+                    run_time
+                )
 
-            # Checkpoint (online)
-            if self.rank == 0:
-                if self.args.exp.neptune:
-                    pass
-                else:
-                    run_time = time.time() - self.start_time
-                    self.logger["parameters/running_time"] = format_time_dynamic(
-                        run_time
-                    )
-
-            self.sync()
 
     def validate(
         self,
@@ -662,63 +565,60 @@ class Experiment:
         )
 
         # Synchronize before validation
-        self.sync()
+        ch_acc = True if self.args.data.full_channels else ch_acc
+        acc = False if self.args.data.full_channels else acc
+        val_loss = stats["loss"]
+        self.log_stats(
+            stats,
+            flag,
+            mae,
+            acc,
+            ch_acc,
+            mode="val",
+            coverage=self.args.conf.validation_eval,
+        )
 
-        if self.rank == 0:
-            ch_acc = True if self.args.data.full_channels else ch_acc
-            acc = False if self.args.data.full_channels else acc
-            val_loss = stats["loss"]
-            self.log_stats(
-                stats,
-                flag,
-                mae,
-                acc,
-                ch_acc,
-                mode="val",
-                coverage=self.args.conf.validation_eval,
+        if self.args.exp.best_model_metric == "loss":
+            val_metric = val_loss
+        elif self.args.exp.best_model_metric in {"acc", "ch_acc", "ch_f1"}:
+            val_metric = -stats[self.args.exp.best_model_metric]
+        else:
+            raise ValueError(
+                f"Invalid best model metric: {self.args.exp.best_model_metric}"
             )
 
-            if self.args.exp.best_model_metric == "loss":
-                val_metric = val_loss
-            elif self.args.exp.best_model_metric in {"acc", "ch_acc", "ch_f1"}:
-                val_metric = -stats[self.args.exp.best_model_metric]
-            else:
-                raise ValueError(
-                    f"Invalid best model metric: {self.args.exp.best_model_metric}"
-                )
+        # Save best model and apply early stopping
+        if early_stopping:
+            self.early_stopping(val_metric, model)
 
-            # Save best model and apply early stopping
-            if early_stopping:
-                self.early_stopping(val_metric, model)
+        else:
+            if val_metric < self.best_val_metric:
+                if self.args.exp.best_model_metric == "loss":
+                    self.print_master(
+                        f"Validation loss decreased ({self.best_val_metric:.6f} --> {val_metric:.6f})."
+                    )
+                elif self.args.exp.best_model_metric in {"acc", "ch_acc", "ch_f1"}:
+                    self.print_master(
+                        f"Validation {self.args.exp.best_model_metric} increased ({-self.best_val_metric*100:.3f}% --> {-val_metric*100:.3f}%)."
+                    )
+                path_dir = os.path.abspath(os.path.dirname(best_model_path))
 
-            else:
-                if val_metric < self.best_val_metric:
-                    if self.args.exp.best_model_metric == "loss":
-                        self.print_master(
-                            f"Validation loss decreased ({self.best_val_metric:.6f} --> {val_metric:.6f})."
-                        )
-                    elif self.args.exp.best_model_metric in {"acc", "ch_acc", "ch_f1"}:
-                        self.print_master(
-                            f"Validation {self.args.exp.best_model_metric} increased ({-self.best_val_metric*100:.3f}% --> {-val_metric*100:.3f}%)."
-                        )
-                    path_dir = os.path.abspath(os.path.dirname(best_model_path))
+                # Save model
+                if not os.path.isdir(path_dir):
+                    os.makedirs(path_dir)
+                torch.save(model.state_dict(), best_model_path)
+                self.print_master(f"Saving Model Weights at: {best_model_path}...")
 
-                    # Save model
-                    if not os.path.isdir(path_dir):
-                        os.makedirs(path_dir)
-                    torch.save(model.state_dict(), best_model_path)
-                    self.print_master(f"Saving Model Weights at: {best_model_path}...")
+                # Save conformal calibration scores
+                if self.args.conf.conf and self.args.conf.validation_eval:
+                    self.print_master(
+                        f"Saving Model Calibration Scores at: {self.score_path}..."
+                    )
+                    torch.save(self.calibration_scores, self.score_path)
 
-                    # Save conformal calibration scores
-                    if self.args.conf.conf and self.args.conf.validation_eval:
-                        self.print_master(
-                            f"Saving Model Calibration Scores at: {self.score_path}..."
-                        )
-                        torch.save(self.calibration_scores, self.score_path)
+                self.best_val_metric = val_metric
 
-                    self.best_val_metric = val_metric
 
-        self.sync()
 
         self.print_master("Validation complete")
 
@@ -730,14 +630,14 @@ class Experiment:
         # Load train loaders
         # self.init_dataloaders(loader_type="train", learning_type="sl")
         self.init_dataloaders(loader_type="all", learning_type="sl")
-        self.sync()
+
 
         # Initialize Model and Optimizer
         self.init_model()
         self.init_optimizer()
 
         # Get supervised criterion
-        self.sync()
+
         self.criterion = get_criterion(self.args, self.args.sl.criterion)
         self.print_master(f"{self.args.sl.criterion} initialized.")
 
@@ -782,7 +682,7 @@ class Experiment:
 
         # Test model
         self.print_master("Starting Supervised Testing...")
-        self.sync()
+
         self.test(
             model=self.model,
             model_id=self.args.exp.model_id,
@@ -830,15 +730,11 @@ class Experiment:
 
         # <---Deep learning (PyTorch) pipeline--->
         # Load best model
-        self.sync()
+
         model_weights = torch.load(best_model_path)
         model.load_state_dict(model_weights)
-        self.train_calibrator(
-            model, model_id, criterion, flag
-        )  # Optional: Train probability calibrator before evaluation
-
         # Test set evaluation
-        self.sync()
+
         stats = self.evaluate(
             model=model,
             model_id=model_id,
@@ -852,15 +748,15 @@ class Experiment:
             coverage=self.args.conf.conf,
         )
 
-        if self.rank == 0:
-            ch_acc = True if self.args.data.full_channels else ch_acc
-            acc = False if self.args.data.full_channels else acc
-            self.log_stats(
-                stats, flag, mae, acc, ch_acc, mode="test", coverage=self.args.conf.conf
-            )
-            self.tuning_score = stats[
-                f"{self.args.exp.tuning_metric}"
-            ]  # For hyperparameter tuning
+
+        ch_acc = True if self.args.data.full_channels else ch_acc
+        acc = False if self.args.data.full_channels else acc
+        self.log_stats(
+            stats, flag, mae, acc, ch_acc, mode="test", coverage=self.args.conf.conf
+        )
+        self.tuning_score = stats[
+            f"{self.args.exp.tuning_metric}"
+        ]  # For hyperparameter tuning
 
     def evaluate(
         self,
@@ -884,7 +780,7 @@ class Experiment:
         mae_loss = nn.L1Loss()
         num_examples = len(loader.dataset)  # Total number of examples across all ranks
 
-        self.sync()
+
         model.eval()
         with torch.no_grad():
 
@@ -926,27 +822,15 @@ class Experiment:
             return self.coverage(preds, targets, mode="calibrate")
 
         # Loss
-        if self.args.ddp.ddp:
-            self.sync()
-            self.print_rank(
-                f"Evaluation loss before all_reduce: {total_loss.item()}. Rank: {self.rank}"
-            )
-            dist.all_reduce(total_loss, op=dist.ReduceOp.SUM)
-        if self.rank == 0:
-            stats["loss"] = total_loss.item() / num_examples
-        self.sync()
-        self.print_rank(
-            f"Evaluation loss after all_reduce: {total_loss.item()}. Rank: {self.rank}."
+        stats["loss"] = total_loss.item() / num_examples
+
+        self.print_master(
+            f"Evaluation loss after all_reduce: {total_loss.item()}."
         )
 
         # MAE
         if mae:
-            if self.args.ddp.ddp:
-                self.sync()
-                dist.all_reduce(total_mae, op=dist.ReduceOp.SUM)
-            self.sync()
-            if self.rank == 0:
-                stats["mae"] = total_mae.item() / num_examples
+            stats["mae"] = total_mae.item() / num_examples
 
         # Window Metrics
         if acc:
@@ -955,8 +839,6 @@ class Experiment:
                 all_logits,
                 all_labels,
                 mode="window",
-                rank=self.rank,
-                calibrator=self.calibrator,
             )
             channel = True if self.args.data.full_channels else False
             update_stats(
@@ -965,7 +847,6 @@ class Experiment:
                 self.args.open_neuro.task,
                 self.args.exp.other_metrics,
                 channel,
-                self.rank,
             )
 
         # Channel Metrics
@@ -977,8 +858,6 @@ class Experiment:
                 all_ch_ids,
                 all_u,
                 mode="channel",
-                rank=self.rank,
-                calibrator=self.calibrator,
             )
             update_stats(
                 stats,
@@ -986,7 +865,6 @@ class Experiment:
                 self.args.open_neuro.task,
                 self.args.exp.other_metrics,
                 True,
-                self.rank,
             )
 
         # Coverage (conformal prediction)
@@ -1006,7 +884,7 @@ class Experiment:
                 stats["interval_width_mean"] = coverage_metrics[2].item()
                 stats["interval_width_std"] = coverage_metrics[3].item()
 
-        self.sync()
+
         return stats
 
     def coverage(self, preds, targets, mode="calibrate", return_intervals=False):
@@ -1083,39 +961,6 @@ class Experiment:
             else:
                 return torch.stack([ic_percent, jc_percent]).to(self.device)
 
-    def train_calibrator(self, model, model_id, criterion, flag="sl"):
-        # Calibration (window or channel probabilities)
-        if self.args.exp.calibrate:
-            self.calibrator = CalibrationModel(self.rank, self.args)
-
-            # Combine train and val loaders into one
-            train_probs, train_targets, train_ch_ids = self.evaluate(
-                model=model,
-                model_id=model_id,
-                loader=self.train_loader,
-                criterion=criterion,
-                flag=flag,
-                calibrate=True,
-            )
-
-            val_probs, val_targets, val_train_ch_ids = self.evaluate(
-                model=model,
-                model_id=model_id,
-                loader=self.val_loader,
-                criterion=criterion,
-                flag=flag,
-                calibrate=True,
-            )
-
-            all_probs = torch.cat([train_probs, val_probs], dim=0).squeeze()
-            all_targets = torch.cat([train_targets, val_targets], dim=0).squeeze()
-            all_ch_ids = torch.cat([train_ch_ids, val_train_ch_ids], dim=0).squeeze()
-
-            probs, targets, ch_ids = self.calibrator.compile_predictions(
-                all_probs, all_targets, all_ch_ids
-            )
-            self.calibrator.train(probs, targets, ch_ids)
-
     def parse_output(self, output, batch):
         ch_ids = torch.tensor(0, device=self.device).unsqueeze(-1)
         u = torch.tensor(0, device=self.device).unsqueeze(-1)
@@ -1125,11 +970,6 @@ class Experiment:
             y_hat = y_hat.unsqueeze(-1)
 
         return (y_hat, y.to(self.device), ch_ids.to(self.device), u.to(self.device))
-
-    def gather_tensor(self, tensor):
-        gathered = [torch.zeros_like(tensor) for _ in range(dist.get_world_size())]
-        dist.all_gather(gathered, tensor)
-        return torch.cat(gathered)
 
     def log_stats(
         self, stats, flag, mae, acc, ch_acc, mode, task="binary", coverage=False
@@ -1198,20 +1038,4 @@ class Experiment:
         """
         Prints statements to the rank 0 node.
         """
-        if self.rank == 0:
-            self.console.log(message)
-
-    def print_rank(self, message):
-        """
-        Prints statement on every rank.
-        """
-        if self.args.exp.rank_verbose:
-            self.console.log(message)
-
-    def sync(self):
-        """
-        Synchronizes all processes for Distributed Data Parallel (DDP).
-        """
-        if self.args.ddp.ddp:
-            dist.barrier()
-            self.print_master("Synchronizing") if self.args.exp.rank_verbose else None
+        self.console.log(message)

@@ -1,5 +1,5 @@
 exp:
-  project_name: "rf-emf-forecasting/RF-EMF"
+  project_name: "time-series-jepa/patchtst"
   model_id: "EMForecaster"
   patch_model_id: "DLinear"
   backbone_id: "DLinear"
@@ -14,12 +14,12 @@ exp:
 
 data:
   seq_load: True
-  dataset: "rf_emf"
+  dataset: "rf_emf_det"
   univariate: True
   window_stride: 1
   dtype: "float32"
   seq_len: 20
-  pred_len: 20
+  pred_len: 30
   train_split: 0.7
   val_split: 0.1
   num_channels: 1
