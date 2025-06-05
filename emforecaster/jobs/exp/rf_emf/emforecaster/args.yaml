@@ -1,11 +1,11 @@
 exp:
   project_name: "rf-emf-forecasting/RF-EMF"
   model_id: "EMForecaster"
-  patch_model_id: "DLinear"
-  backbone_id: "DLinear"
+  patch_model_id: "TSMixer"
+  backbone_id: "Linear"
   learning_type: "sl"
-  seed_list: [69421, 69422, 69423, 69424, 69425]
-  seed: 69421
+  seed_list: [69423]
+  seed: 69423
   mae: True
   rank_verbose: False
   task: "forecasting"
@@ -13,18 +13,25 @@ exp:
   gpu_id: 0
 
 data:
+  patch_dim: 8
+  patch_stride: -1
   seq_load: True
-  dataset: "rf_emf"
+  dataset: "rf_emf_det"
   univariate: True
   window_stride: 1
   dtype: "float32"
-  seq_len: 20
-  pred_len: 20
+  seq_len: 336
+  pred_len: 96
   train_split: 0.7
   val_split: 0.1
   num_channels: 1
   num_workers: 4
   scale: True
+
+tsmixer:
+  dropout: 0.3
+  num_enc_layers: 2
+  d_model: 256
 
 dlinear:
   moving_avg: 3
@@ -38,13 +45,14 @@ ddp:
 
 sl:
   optimizer: "adam"
+  pos_enc: "none"
   dataset_class: "univariate_forecasting"
   criterion: "MSE"
   scheduler: "onecycle"
   dropout: 0.3
   epochs: 100
   batch_size: 512
-  lr: 1e-5
+  lr: 1e-4
   early_stopping: True
   weight_decay: 1e-5
   return_head: True
@@ -56,10 +64,10 @@ sl:
   eps_revin: 1e-5
 
   # EMForecaster
-  patch_norm: "layer"
+  patch_norm: "none"
   patch_act: "gelu"
-  patch_embed_dim: 128
-  independent_patching: True
+  patch_embed_dim: 256
+  independent_patching: False
 
 scheduler:
   pct_start: 0.3

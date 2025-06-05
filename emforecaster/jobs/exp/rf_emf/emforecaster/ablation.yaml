@@ -17,7 +17,7 @@ ablations:
   tsmixer.d_model: [128, 256, 512]
   data.patch_dim: [8]
   data.patch_stride: [-1]
-  sl.patch_embed_dim: [256, 512]
+  sl.patch_embed_dim: [256]
   sl.pos_enc: ["none"]
   dlinear.final_moving_avg: [25]
   sl.independent_patching: [False]
