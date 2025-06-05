@@ -6,6 +6,7 @@ import json
 import warnings
 import shutil
 import random
+import matplotlib.pyplot as plt
 
 warnings.filterwarnings(
     "ignore", message="h5py not installed, hdf5 features will not be supported."
@@ -746,6 +747,8 @@ class Experiment:
             ch_acc=ch_acc,
             conformal_calibrate=False,
             coverage=self.args.conf.conf,
+            plot_results=True,
+            num_plots=10,
         )
 
 
@@ -771,6 +774,8 @@ class Experiment:
         calibrate=False,
         conformal_calibrate=False,
         coverage=False,
+        plot_results=False,
+        num_plots=10
     ):
         """
         Evaluate the model return evaluation loss and/or evaluation accuracy.
@@ -791,6 +796,12 @@ class Experiment:
             all_labels = []
             all_ch_ids = []
             all_u = []
+
+            n = len(loader.dataset)
+            # Get num_plots random indices for plotting
+            plotting_indices = random.sample(
+                range(n), min(num_plots, n)
+            ) if plot_results else []
 
             for i, batch in enumerate(loader):
                 output = forward_pass(self.args, model, batch, model_id, self.device)
@@ -813,12 +824,16 @@ class Experiment:
                         mae_loss(output, batch[1].to(self.device)) * num_batch_examples
                     )
 
+        preds = torch.cat(all_logits)
+        targets = torch.cat(all_labels)
+
+        if plot_results:
+            self.plot(preds, targets, plotting_indices)
+
         if calibrate:
-            return torch.cat(all_logits), torch.cat(all_labels), torch.cat(all_ch_ids)
+            return preds, targets, torch.cat(all_ch_ids)
 
         if conformal_calibrate:  # Conformal calibration
-            preds = torch.cat(all_logits)
-            targets = torch.cat(all_labels)
             return self.coverage(preds, targets, mode="calibrate")
 
         # Loss
@@ -886,6 +901,26 @@ class Experiment:
 
 
         return stats
+
+    def plot(self, preds, targets, indices):
+        """
+        Plot the predictions and targets for a given set of indices.
+        """
+
+        self.print_master("Plotting results...")
+
+        for idx in indices:
+            plt.figure(figsize=(10, 5))
+            plt.plot(preds[idx].cpu().numpy(), label="Predictions")
+            plt.plot(targets[idx].cpu().numpy(), label="Targets")
+            plt.title(f"Sample {idx}")
+            plt.xlabel("Time (6min)")
+            plt.ylabel("Normalized EMF Exposure (V/m)")
+
+            # Save the plot to the log directory
+            plot_path = os.path.join(self.log_dir, f"plot_{idx}.png")
+            plt.savefig(plot_path)
+            self.print_master(f"Saved plot {idx} to {plot_path}")
 
     def coverage(self, preds, targets, mode="calibrate", return_intervals=False):
         """
