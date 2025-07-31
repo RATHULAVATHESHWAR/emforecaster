@@ -72,10 +72,10 @@ If you use this code in your research or work, please cite our paper:
 ```bibtex
 @article{mootoo2025emforecaster,
     title     = {EMForecaster: A Deep Learning Framework for Time Series Forecasting in Wireless Networks with Distribution-Free Uncertainty Quantification},
-    author    = {Mootoo, Xavier and Chiaraviglio, Luca and Tabassum, Hina},
+    author    = {Mootoo, Xavier and Tabassum, Hina and Chiaraviglio, Luca},
     year      = {2025},
 }
-```
+```    
 
 ## Contact
 For queries, please contact the corresponding author through: `xmootoo at gmail dot com`.
