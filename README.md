@@ -2,7 +2,7 @@
 ## Overview
 This is the official repository for the paper:
 
->[Xavier Mootoo, Hina Tabassum, Luca Chiaraviglio. EMForecaster: A Deep Learning Framework for Time Series Forecasting in Wireless Networks with Distribution-Free Uncertainty Quantification (IEEE Transactions on Network Science and Engineering, under review).](https://xaviermootoo.com/s/emforecaster.pdf)
+>[Mootoo, Xavier, Hina Tabassum, and Luca Chiaraviglio. "EMForecaster: A deep learning framework for time series forecasting in wireless networks with distribution-free uncertainty quantification." IEEE Transactions on Network Science and Engineering (2025).](https://ieeexplore.ieee.org/document/11095417)
 
 ## Description
 EMForecaster is a novel deep learning architecture specialized for time series forecasting, benchmarked primarily on electromagnetic field (EMF) exposure forecasting. EMForecaster also includes a conformal prediction pipeline for uncertainty quantification, along with a trade-off score metric which we propose a unified measure of model performance to balance width of prediction intervals (minimizing) and empirical coverage (maximizing).
@@ -71,9 +71,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you use this code in your research or work, please cite our paper:
 ```bibtex
 @article{mootoo2025emforecaster,
-    title     = {EMForecaster: A Deep Learning Framework for Time Series Forecasting in Wireless Networks with Distribution-Free Uncertainty Quantification},
-    author    = {Mootoo, Xavier and Tabassum, Hina and Chiaraviglio, Luca},
-    year      = {2025},
+  title={EMForecaster: A deep learning framework for time series forecasting in wireless networks with distribution-free uncertainty quantification},
+  author={Mootoo, Xavier and Tabassum, Hina and Chiaraviglio, Luca},
+  journal={IEEE Transactions on Network Science and Engineering},
+  year={2025},
+  publisher={IEEE}
 }
 ```    
 
