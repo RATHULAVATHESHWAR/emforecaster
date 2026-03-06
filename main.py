@@ -74,9 +74,6 @@ def main(job_name="test", ablation=None, ablation_id=1):
     # Run experiment on multiple seeds (optional)
     seed_list = args.exp.seed_list
 
-    if args.open_neuro.loocv:
-        args.open_neuro.patient_cluster = "loocv_" + args.open_neuro.test_clusters[0]
-
     for i in range(len(seed_list)):
         args.exp.seed = seed_list[i]
         args.exp.time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")

@@ -151,7 +151,7 @@ class Experiment(BaseModel):
 class Data(BaseModel):
     dataset: str = Field(
         default="electricity",
-        description="Name of the dataset. Options: 'electricity', 'traffic', 'weather', 'exchange_rate', 'illness', 'ETTh1', 'ETTh2', 'ETTm1', 'ETTm2', 'open_neuro', 'LongTerm17'.",
+        description="Name of the dataset. Options:'rf_emf', 'rf_emf_det', 'rf_emf_det2', 'rf_emf_ptv', 'rf_emf_ptv2', 'rf_emf_tur', 'rf_emf_tur2', 'rf_emf_nov'.",
     )
     dtype: str = Field(
         default="float32", description="Type of data. Options: 'float32', 'float64'"
@@ -227,10 +227,7 @@ class Data(BaseModel):
         default=False,
         description="Whether to use numpy data in dataloading (will not be converted to torch tensors).",
     )
-    rocket_transform: bool = Field(
-        default=False,
-        description="Whether to use the ROCKET transform for time series data.",
-    )
+    
     full_channels: bool = Field(
         default=False,
         description="Whether to use the full channels for the OpenNeuro dataset or not.",

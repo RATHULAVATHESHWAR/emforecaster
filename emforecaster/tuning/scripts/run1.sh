@@ -2,11 +2,11 @@
 
 export CUDA_LAUNCH_BLOCKING=1
 
-source /home/fam/xmootoo/torch2024_new/bin/activate
+source /home/fam/xmootoo/torch2024_new/bin/activate # <- Replace with your environment command to activate
 
 # Define list of ablations
 ablations=(
-    "rf_emf/baselines/cnn"
+    "rf_emf/baselines/cnn" # <- Replace with your experiment names (subdirectory of jobs/)
     "rf_emf/baselines/lstm"
     "rf_emf/baselines/mlp"
     "rf_emf/baselines/transformer"

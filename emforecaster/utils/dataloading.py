@@ -16,8 +16,6 @@ from torch.utils.data import DataLoader
 import pandas as pd
 import numpy as np
 
-# ROCKET
-from emforecaster.layers.rocket.random_kernels import generate_kernels, apply_kernels
 
 
 # Dataset Classes
@@ -903,34 +901,6 @@ def resize_sequence(data, max_seq_len=3000, resizing_mode="none"):
 
     return torch.from_numpy(resized_data)
 
-def get_rocket_features(data, num_kernels, max_dilation, seed):
-    """
-    Create a Rocket transform object.
-
-    Args:
-        data (List[np.ndarray]): List of time series data each are 1D numpy arrays of shape (*,).
-        num_kernels (int): Number of kernels to use.
-        max_dilation (int): Maximum dilation to use for the kernels.
-        seed (int): Random seed for reproducibility.
-    Returns:
-        transformed (torch.Tensor): A tensor of transformed data, of shape (n, 2*num_kernels) where n is the number of time series.
-    """
-
-    # Generate kernels
-    kernels = generate_kernels(max_dilation, num_kernels, seed)
-
-    # Apply kernels
-    n = len(data)
-    num_features = 2 * num_kernels
-    rocket_features = torch.zeros(n, num_features)
-
-    for i in range(n):
-        input = data[i].double().cpu().numpy()
-        kernel_out = apply_kernels(input, kernels)
-        rocket_features[i] = torch.from_numpy(kernel_out).squeeze()
-
-    return rocket_features
-
 # <-----------------General Usage------------------------>
 def get_loader(
     args,
@@ -952,11 +922,6 @@ def get_loader(
 
     if isinstance(data, np.ndarray):
         data = torch.from_numpy(data).float()
-
-    if args.data.rocket_transform:
-        data = get_rocket_features(
-            data, args.sl.num_kernels, args.sl.max_dilation, args.exp.seed
-        )
 
     if dataset_class == "forecasting":
         dataset = ForecastingDataset(
