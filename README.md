@@ -1,6 +1,6 @@
 # ⚡ EMF Exposure Prediction System
 
-A web-based application to predict Electromagnetic Field (EMF) exposure using user inputs such as frequency, power, and distance. The system visualizes exposure levels and classifies safety risks.
+A web-based application to predict Electromagnetic Field (EMF) exposure using user inputs such as frequency, power, and distance.
 
 ---
 
@@ -8,10 +8,10 @@ A web-based application to predict Electromagnetic Field (EMF) exposure using us
 
 - EMF prediction using inverse-square model
 - User input (Frequency, Power, Distance)
-- Graph visualization (EMF vs Distance)
+- Graph visualization
 - Safety classification (Safe / Moderate / High Risk)
-- Web interface using Flask
-- Deployed on Ubuntu cloud server
+- Flask web application
+- Deployed on Ubuntu server
 
 ---
 
@@ -21,7 +21,7 @@ EMF = (Power × Frequency Factor) / Distance²
 
 Where:
 - Frequency Factor = Frequency / 1000
-- Distance follows inverse-square law
+- EMF decreases with distance (inverse-square law)
 
 ---
 
@@ -35,38 +35,59 @@ Where:
 
 ---
 
-## ⚙️ Installation & Setup (Ubuntu Server)
+## ⚙️ Installation & Setup (Ubuntu)
 
 ### 1. Update system
 sudo apt update && sudo apt upgrade -y
 
-### 2. Install Python & pip
+---
+
+### 2. Install Python
 sudo apt install python3 python3-pip python3-venv -y
 
-### 3. Clone project (or upload files)
-git clone <your-repo-link>
-cd emforecaster
+---
+
+### 3. Go to project folder
+cd ~/emforecaster
+
+---
 
 ### 4. Create virtual environment
 python3 -m venv venv
+
+---
+
+### 5. Activate environment
 source venv/bin/activate
 
-### 5. Install dependencies
+---
+
+### 6. Install dependencies
 pip install flask numpy matplotlib
 
 ---
 
-## ▶️ Run Application
+## ▶️ Run Web Application
 
+### Step 1: Go to project folder
 cd ~/emforecaster
+
+### Step 2: Activate environment
 source venv/bin/activate
+
+### Step 3: Run Flask app
 python app.py
 
 ---
 
-## 🌐 Access in Browser
+## 🌐 Access Application
+
+Open browser and go to:
 
 http://YOUR-SERVER-IP:5000
+
+Example:
+http://172.31.37.211:5000
 
 ---
 
@@ -77,7 +98,7 @@ http://YOUR-SERVER-IP:5000
    - Power (W)
    - Distance (m)
 
-2. Click "Predict"
+2. Click **Predict**
 
 3. View:
    - EMF Exposure value
@@ -90,20 +111,20 @@ http://YOUR-SERVER-IP:5000
 
 - EMF exposure value
 - Risk classification
-- Graph showing EMF vs Distance
+- EMF vs Distance graph
 - Safety zones visualization
 
 ---
 
 ## 🎓 Project Explanation
 
-This system predicts EMF exposure based on physical parameters using a normalized inverse-square model. It provides both numerical and graphical outputs, making it useful for analyzing electromagnetic safety levels.
+This system predicts EMF exposure using a normalized inverse-square model. It classifies risk levels and provides graphical visualization for better understanding.
 
 ---
 
 ## 🚀 Future Improvements
 
-- Integrate AI-based forecasting model
+- Add AI-based prediction model
 - Export results as PDF
 - Interactive graphs
 - Deploy with domain
