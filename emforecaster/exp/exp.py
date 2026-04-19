@@ -50,7 +50,11 @@ from emforecaster.utils.classification import (
 from emforecaster.conformal.coverage import get_all_critical_scores, get_coverage
 
 # Logger
-import neptune
+class DummyNeptune:
+    def __getattr__(self, name):
+        return lambda *args, **kwargs: None
+
+neptune = DummyNeptune()
 from emforecaster.utils.logger import (
     log_pydantic,
     epoch_logger,

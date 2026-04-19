@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EMF Result</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            margin-top: 50px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.2);
+            width: 500px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #1e3c72;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .risk {
+            font-size: 20px;
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        img {
+            display: block;
+            margin: 20px auto;
+        }
+
+        .btn {
+            display: block;
+            text-align: center;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h2>📊 EMF Prediction Result</h2>
+
+        <div class="row">
+            <span class="label">Frequency:</span>
+            <span>{{ freq }} Hz</span>
+        </div>
+
+        <div class="row">
+            <span class="label">Power:</span>
+            <span>{{ power }} W</span>
+        </div>
+
+        <div class="row">
+            <span class="label">Distance:</span>
+            <span>{{ distance }} m</span>
+        </div>
+
+        <hr>
+
+        <div class="row">
+            <span class="label">EMF Exposure:</span>
+            <span>{{ emf }} (relative units)</span>
+        </div>
+
+        <div class="risk" style="color: {{ color }}">
+            <b>{{ level }}</b>
+        </div>
+
+        <div class="row">
+            <span class="label">Insight:</span>
+            <span>EMF decreases with distance (inverse-square law)</span>
+        </div>
+
+        <img src="/static/output.png" width="400">
+
+        <a href="/" class="btn">⬅ Back</a>
+
+    </div>
+</div>
+
+</body>
+</html>

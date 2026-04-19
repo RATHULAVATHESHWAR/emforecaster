@@ -22,3 +22,5 @@ logs/
 old_logs/
 figures/
 .ropeproject/
+# Python virtual environment
+venv/

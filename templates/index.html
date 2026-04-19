@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EMF Predictor</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 350px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #1e3c72;
+        }
+
+        label {
+            display: block;
+            text-align: left;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            background: linear-gradient(to right, #007bff, #00c6ff);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .quick {
+            margin-top: 20px;
+        }
+
+        .quick button {
+            width: auto;
+            margin: 5px;
+            padding: 8px 15px;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 15px;
+            font-size: 12px;
+            color: gray;
+        }
+    </style>
+
+    <script>
+    function setValues(f,p,d){
+        document.getElementsByName('frequency')[0].value=f;
+        document.getElementsByName('power')[0].value=p;
+        document.getElementsByName('distance')[0].value=d;
+    }
+    </script>
+
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h1>⚡ EMF Predictor</h1>
+
+        <form action="/predict" method="post">
+
+            <label>Frequency (Hz)</label>
+            <input type="number" step="any" name="frequency" required>
+
+            <label>Power (W)</label>
+            <input type="number" step="any" name="power" required>
+
+            <label>Distance (m)</label>
+            <input type="number" step="any" name="distance" required>
+
+            <button type="submit">🔍 Predict EMF</button>
+
+        </form>
+
+        <div class="quick">
+            <p><b>Quick Scenarios</b></p>
+            <button onclick="setValues(900,10,5)">📡 Mobile Tower</button>
+            <button onclick="setValues(2400,5,2)">📶 WiFi Router</button>
+        </div>
+
+        <div class="footer">
+            AI-based EMF Exposure Prediction System
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

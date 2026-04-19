@@ -19,9 +19,9 @@ data:
   window_stride: 1
   dtype: "float32"
   seq_len: 20
-  pred_len: 30
+  pred_len: 10
   train_split: 0.7
-  val_split: 0.1
+  val_split: 0.2
   num_channels: 1
   num_workers: 4
   scale: True
