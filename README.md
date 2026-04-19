@@ -1,137 +1,171 @@
 # ⚡ EMF Exposure Prediction System
 
-A web-based application to predict Electromagnetic Field (EMF) exposure using user inputs such as frequency, power, and distance.
+A web-based application to predict Electromagnetic Field (EMF) exposure using Frequency, Power, and Distance. The system provides risk classification and graphical visualization.
 
 ---
 
-## 🚀 Features
+## 🎯 Objective
 
-- EMF prediction using inverse-square model
-- User input (Frequency, Power, Distance)
-- Graph visualization
-- Safety classification (Safe / Moderate / High Risk)
-- Flask web application
-- Deployed on Ubuntu server
+To estimate EMF exposure levels and classify them into safety categories using a physics-based inverse-square model, presented through a web interface.
 
 ---
 
-## 🧠 Model Explanation
+## 🧠 Model Used
 
 EMF = (Power × Frequency Factor) / Distance²
 
 Where:
-- Frequency Factor = Frequency / 1000
-- EMF decreases with distance (inverse-square law)
+
+* Frequency Factor = Frequency / 1000
+* Based on inverse-square law (EMF decreases with distance)
 
 ---
 
-## 🖥️ Tech Stack
+## 🛠️ Tools & Technologies Used
 
-- Python 3
-- Flask
-- NumPy
-- Matplotlib
-- HTML + CSS
+| Tool          | Purpose                             |
+| ------------- | ----------------------------------- |
+| Python 3      | Core programming language           |
+| Flask         | Web framework for backend           |
+| NumPy         | Mathematical calculations           |
+| Matplotlib    | Graph visualization                 |
+| HTML/CSS      | Frontend UI                         |
+| Ubuntu Server | Deployment environment              |
+| Git & GitHub  | Version control and project hosting |
 
 ---
 
 ## ⚙️ Installation & Setup (Ubuntu)
 
-### 1. Update system
+### Step 1: Update system
+
+```bash
 sudo apt update && sudo apt upgrade -y
+```
 
----
+### Step 2: Install Python and tools
 
-### 2. Install Python
+```bash
 sudo apt install python3 python3-pip python3-venv -y
+```
 
 ---
 
-### 3. Go to project folder
+## 📁 Project Setup
+
+### Step 3: Navigate to project folder
+
+```bash
 cd ~/emforecaster
+```
 
----
+### Step 4: Create virtual environment
 
-### 4. Create virtual environment
+```bash
 python3 -m venv venv
+```
 
----
+### Step 5: Activate environment
 
-### 5. Activate environment
+```bash
 source venv/bin/activate
+```
 
----
+### Step 6: Install dependencies
 
-### 6. Install dependencies
+```bash
 pip install flask numpy matplotlib
+```
 
 ---
 
-## ▶️ Run Web Application
+## ▶️ Run the Web Application
 
-### Step 1: Go to project folder
+### Step 1: Go to project directory
+
+```bash
 cd ~/emforecaster
+```
 
 ### Step 2: Activate environment
-source venv/bin/activate
 
-### Step 3: Run Flask app
+```bash
+source venv/bin/activate
+```
+
+### Step 3: Run the application
+
+```bash
 python app.py
+```
 
 ---
 
-## 🌐 Access Application
+## 🌐 Access the Application
 
-Open browser and go to:
+Open your browser:
 
+```bash
 http://YOUR-SERVER-IP:5000
+```
 
 Example:
+
+```bash
 http://172.31.37.211:5000
+```
 
 ---
 
-## 📊 Usage
+## 📊 How to Use
 
 1. Enter:
-   - Frequency (Hz)
-   - Power (W)
-   - Distance (m)
+
+   * Frequency (Hz)
+   * Power (W)
+   * Distance (m)
 
 2. Click **Predict**
 
-3. View:
-   - EMF Exposure value
-   - Risk level
-   - Graph visualization
+3. The system will display:
+
+   * EMF exposure value
+   * Risk level (Safe / Moderate / High Risk)
+   * Graph visualization
 
 ---
 
-## 📈 Output
+## 📈 Output Description
 
-- EMF exposure value
-- Risk classification
-- EMF vs Distance graph
-- Safety zones visualization
+* Numerical EMF value
+* Safety classification
+* Graph showing EMF vs Distance
+* Highlighted input point
+* Safety zones:
+
+  * 🟢 Green (Safe)
+  * 🟠 Orange (Moderate)
+  * 🔴 Red (High Risk)
 
 ---
 
-## 🎓 Project Explanation
+## 📌 Notes
 
-This system predicts EMF exposure using a normalized inverse-square model. It classifies risk levels and provides graphical visualization for better understanding.
+* Ensure the virtual environment is activated before running the app.
+* Modify `app.py` if you want to change thresholds or visualization style.
+* Suitable for educational and demonstration purposes.
 
 ---
 
 ## 🚀 Future Improvements
 
-- Add AI-based prediction model
-- Export results as PDF
-- Interactive graphs
-- Deploy with domain
+* Add real-time sensor integration
+* Deploy using Docker
+* Add user authentication
+* Improve UI with modern frameworks
 
 ---
 
 ## 👨‍💻 Author
 
-Final Year Project  
-EMF Exposure Prediction System
+Developed as a physics-based EMF prediction and visualization system.
