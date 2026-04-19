@@ -4,6 +4,12 @@ A web-based application to predict Electromagnetic Field (EMF) exposure using Fr
 
 ---
 
+## 🔗 Repository
+
+GitHub: https://github.com/RATHULAVATHESHWAR/emforecaster.git
+
+---
+
 ## 🎯 Objective
 
 To estimate EMF exposure levels and classify them into safety categories using a physics-based inverse-square model, presented through a web interface.
@@ -51,27 +57,30 @@ sudo apt install python3 python3-pip python3-venv -y
 
 ---
 
-## 📁 Project Setup
-
-### Step 3: Navigate to project folder
+## 📥 Clone the Repository
 
 ```bash
-cd ~/emforecaster
+git clone https://github.com/RATHULAVATHESHWAR/emforecaster.git
+cd emforecaster
 ```
 
-### Step 4: Create virtual environment
+---
+
+## 📁 Project Setup
+
+### Step 3: Create virtual environment
 
 ```bash
 python3 -m venv venv
 ```
 
-### Step 5: Activate environment
+### Step 4: Activate environment
 
 ```bash
 source venv/bin/activate
 ```
 
-### Step 6: Install dependencies
+### Step 5: Install dependencies
 
 ```bash
 pip install flask numpy matplotlib
@@ -80,20 +89,6 @@ pip install flask numpy matplotlib
 ---
 
 ## ▶️ Run the Web Application
-
-### Step 1: Go to project directory
-
-```bash
-cd ~/emforecaster
-```
-
-### Step 2: Activate environment
-
-```bash
-source venv/bin/activate
-```
-
-### Step 3: Run the application
 
 ```bash
 python app.py
@@ -105,13 +100,13 @@ python app.py
 
 Open your browser:
 
-```bash
+```
 http://YOUR-SERVER-IP:5000
 ```
 
 Example:
 
-```bash
+```
 http://172.31.37.211:5000
 ```
 
@@ -168,4 +163,4 @@ http://172.31.37.211:5000
 
 ## 👨‍💻 Author
 
-Developed as a physics-based EMF prediction and visualization system.
+Developed by RATHULAVATH ESHWAR
