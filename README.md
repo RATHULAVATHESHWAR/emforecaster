@@ -1,88 +1,116 @@
-# EMForecaster
-## Overview
-This is the official repository for the paper:
+# ⚡ EMF Exposure Prediction System
 
->[Mootoo, Xavier, Hina Tabassum, and Luca Chiaraviglio. "EMForecaster: A deep learning framework for time series forecasting in wireless networks with distribution-free uncertainty quantification." IEEE Transactions on Network Science and Engineering (2025).](https://ieeexplore.ieee.org/document/11095417)
+A web-based application to predict Electromagnetic Field (EMF) exposure using user inputs such as frequency, power, and distance. The system visualizes exposure levels and classifies safety risks.
 
-## Description
-EMForecaster is a novel deep learning architecture specialized for time series forecasting, benchmarked primarily on electromagnetic field (EMF) exposure forecasting. EMForecaster also includes a conformal prediction pipeline for uncertainty quantification, along with a trade-off score metric which we propose a unified measure of model performance to balance width of prediction intervals (minimizing) and empirical coverage (maximizing).
+---
 
+## 🚀 Features
 
-## Installation
-### Dependencies
-- Python $\geq$ 3.10
+- EMF prediction using inverse-square model
+- User input (Frequency, Power, Distance)
+- Graph visualization (EMF vs Distance)
+- Safety classification (Safe / Moderate / High Risk)
+- Web interface using Flask
+- Deployed on Ubuntu cloud server
 
-### Using conda
-```bash
-# Create and activate conda environment
-conda create -n emforecaster python=3.10
-conda activate emforecaster
+---
 
-# Install requirements
-pip install -e .
-```
+## 🧠 Model Explanation
 
-### Using pip
-```bash
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+EMF = (Power × Frequency Factor) / Distance²
 
-# Install requirements
-pip install -e .
-```
+Where:
+- Frequency Factor = Frequency / 1000
+- Distance follows inverse-square law
 
-## Data
-Data is proprietary and provided by primarily by Luca Chiaraviglio, please contact him for access.
+---
 
-## Usage
+## 🖥️ Tech Stack
 
-### Running Experiments
-Execute the main script with the desired model:
-```python
-python main.py <model>
-```
+- Python 3
+- Flask
+- NumPy
+- Matplotlib
+- HTML + CSS
 
-Results are saved in the `logs` folder if using offline logging. To run custom experiments, run `emforecaster/jobs/exp/<model>/args.yaml` for each model, with respect to the classes in [`config.py`](/emforecaster/config/config.py).
+---
 
+## ⚙️ Installation & Setup (Ubuntu Server)
 
-### Hyperparameter Tuning
-Hyperparameter tuning is also available, by modifying `emforecaster/jobs/exp/<model>/ablation.yaml`, which performs grid search on a set of parameters. To run hyperparameter tuning jobs use:
-```python
-python /tuning/tune.py <model>
-```
+### 1. Update system
+sudo apt update && sudo apt upgrade -y
 
-### Neptune Tracking
-This project allows for online experimental logging via Neptune.ai, which is free for researchers and students.
+### 2. Install Python & pip
+sudo apt install python3 python3-pip python3-venv -y
 
-1. Create a Neptune.ai account and API token
-2. Set your Neptune API token as an environment variable:
-```bash
-export NEPTUNE_API_TOKEN='your-neptune-api-token'
-```
-3. Set `neptune: True` in your `args.yaml` under the `exp` category. See other parameters such as `run_id` and `exp_id`.
+### 3. Clone project (or upload files)
+git clone <your-repo-link>
+cd emforecaster
 
-The [`get_results.py`](/emforecaster/analysis/neptune/get_results.py) reads your `<model>.yaml` file in the [`emforecaster/analysis/neptune/ablations`](/emforecaster/analysis/neptune/ablations) directory, which iterates through all model runs (e.g., from a hyperparameter run) to display the best result with respect to a `deciding_metric` (e.g., MSE). All model runs and their model configurations are displayed and saved as `results.csv`.
+### 4. Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+### 5. Install dependencies
+pip install flask numpy matplotlib
 
-## Citations
-If you use this code in your research or work, please cite our paper:
-```bibtex
-@article{mootoo2025emforecaster,
-  title={EMForecaster: A deep learning framework for time series forecasting in wireless networks with distribution-free uncertainty quantification},
-  author={Mootoo, Xavier and Tabassum, Hina and Chiaraviglio, Luca},
-  journal={IEEE Transactions on Network Science and Engineering},
-  year={2025},
-  publisher={IEEE}
-}
-```    
+---
 
-## Contact
-For queries, please contact the corresponding author through: `xmootoo at gmail dot com`.
+## ▶️ Run Application
 
-## Acknowledgments
-Xavier Mootoo is supported by Canada Graduate Scholarships - Master's (CGS-M) funded by the [Natural Sciences and Engineering Research Council](https://www.nserc-crsng.gc.ca/index_eng.asp) (NSERC) of Canada, the Vector Scholarship in Artificial Intelligence, provided through the [Vector Institute](https://vectorinstitute.ai/), Canada, and the Ontario Graduate Scholarship (OGS) granted by the provincial government of Ontario, Canada.
+cd ~/emforecaster
+source venv/bin/activate
+python app.py
 
-We extend our gratitude to [Commune AI](https://communeai.org/) for generously providing the computational resources needed to carry out our experiments, in particular, we thank Luca Vivona ([@LVivona](https://github.com/LVivona)) and Sal Vivona ([@salvivona](https://github.com/salvivona)).
+---
+
+## 🌐 Access in Browser
+
+http://YOUR-SERVER-IP:5000
+
+---
+
+## 📊 Usage
+
+1. Enter:
+   - Frequency (Hz)
+   - Power (W)
+   - Distance (m)
+
+2. Click "Predict"
+
+3. View:
+   - EMF Exposure value
+   - Risk level
+   - Graph visualization
+
+---
+
+## 📈 Output
+
+- EMF exposure value
+- Risk classification
+- Graph showing EMF vs Distance
+- Safety zones visualization
+
+---
+
+## 🎓 Project Explanation
+
+This system predicts EMF exposure based on physical parameters using a normalized inverse-square model. It provides both numerical and graphical outputs, making it useful for analyzing electromagnetic safety levels.
+
+---
+
+## 🚀 Future Improvements
+
+- Integrate AI-based forecasting model
+- Export results as PDF
+- Interactive graphs
+- Deploy with domain
+
+---
+
+## 👨‍💻 Author
+
+Final Year Project  
+EMF Exposure Prediction System
